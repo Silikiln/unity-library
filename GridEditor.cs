@@ -74,8 +74,7 @@ public class GridEditor : Editor {
             case EventType.MouseDrag:
                 if (Event.current.button != 0) break;
                 Camera editorCamera = SceneView.currentDrawingSceneView.camera;
-                Vector3 mousePosition = Event.current.mousePosition;
-                Ray mouseRay = editorCamera.ScreenPointToRay(mousePosition);
+                Ray mouseRay = editorCamera.ScreenPointToRay(new Vector3(Event.current.mousePosition.x, Event.current.mousePosition.y, editorCamera.nearClipPlane));
                 mouseRay.direction = Vector3.Reflect(mouseRay.direction, editorCamera.transform.up.normalized);
                 float distance;
                 if (grid.Plane.Raycast(mouseRay, out distance))
