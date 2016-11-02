@@ -72,7 +72,7 @@ public class XmlParseAttribute : Attribute {
 
     static Dictionary<Type, Func<string, object>> parseMethods = new Dictionary<Type, Func<string, object>>
     {
-        { typeof(bool), data => float.Parse(data) },
+        { typeof(bool), data => bool.Parse(data) },
 
         { typeof(sbyte), data => sbyte.Parse(data) },
         { typeof(byte), data => byte.Parse(data) },
