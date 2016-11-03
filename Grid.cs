@@ -43,16 +43,7 @@ public class Grid : MonoBehaviour
         get
         {
             if (_gridObjects == null)
-            {
-                _gridObjects = new Dictionary<int, GameObject>[Depth];
-                for (int i = 0; i < Depth; i++) _gridObjects[i] = new Dictionary<int, GameObject>();
-                foreach (Transform t in transform)
-                    if (PositionInGrid(t.position))
-                    {
-                        Vector3 localSlot = WorldToLocalSlot(t.position);
-                        _gridObjects[(int)localSlot.y].Add(ChildHashCode(localSlot), t.gameObject);
-                    }
-            }
+                GenerateGrid();
             return _gridObjects;
         }
     }
@@ -145,5 +136,26 @@ public class Grid : MonoBehaviour
             if (kv.Value == null) continue;
             kv.Value.gameObject.SetActive(active);
         }
+    }
+
+    public virtual void GenerateGrid()
+    {
+        ClearGrid();
+
+        _gridObjects = new Dictionary<int, GameObject>[Depth];
+        for (int i = 0; i < Depth; i++) _gridObjects[i] = new Dictionary<int, GameObject>();
+        foreach (Transform t in transform)
+            if (PositionInGrid(t.position))
+            {
+                Vector3 localSlot = WorldToLocalSlot(t.position);
+                _gridObjects[(int)localSlot.y].Add(ChildHashCode(localSlot), t.gameObject);
+            }
+    }
+
+    protected virtual void ClearGrid()
+    {
+        if (_gridObjects != null)
+            foreach (Dictionary<int, GameObject> dict in _gridObjects)
+                if (dict != null) dict.Clear();
     }
 }
