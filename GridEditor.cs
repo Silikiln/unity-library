@@ -110,5 +110,7 @@ public class GridEditor : Editor {
             else
                 grid.SetAllLevelActive(true);
         }
+        if (GUILayout.Button("Re-Initialize Grid"))
+            grid.GenerateGrid();
     }
 }
