@@ -104,8 +104,9 @@ public class Grid : MonoBehaviour
     protected virtual GameObject Instantiate(int x, int y, int z)
     {
         if (prefabToUse == null) return null;
-        GameObject obj = (GameObject) Instantiate(prefabToUse, LocalPosition(x, y, z) + prefabToUse.transform.position, prefabToUse.transform.rotation, transform);
+        GameObject obj = (GameObject) Instantiate(prefabToUse, Vector3.zero, prefabToUse.transform.rotation, transform);
         obj.transform.SetParent(_levelParents[y]);
+        obj.transform.localPosition = LocalPosition(x, y, z) + prefabToUse.transform.position;
         return obj;
     }
 
@@ -120,10 +121,10 @@ public class Grid : MonoBehaviour
         return result;
     }
 
-    public virtual Vector3 ScaledPosition(int x, int y, int z)
+    public virtual Vector3 WorldPosition(int x, int y, int z)
     {
         Vector3 scaledPosition = LocalPosition(x, y, z);
-        scaledPosition.Scale(transform.localScale);
+        scaledPosition.Scale(transform.lossyScale);
         return transform.position + scaledPosition;
     }
 
@@ -153,6 +154,7 @@ public class Grid : MonoBehaviour
             {
                 _levelParents[i] = new GameObject(_levelParentPrefix + i).transform;
                 _levelParents[i].SetParent(transform);
+                _levelParents[i].localScale = Vector3.one;
                 _levelParents[i].localPosition = Vector3.zero;
             }
             _gridObjects[i] = new Dictionary<int, GameObject>();
