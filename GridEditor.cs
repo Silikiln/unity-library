@@ -6,19 +6,15 @@ using System.Linq;
 [CustomEditor(typeof(Grid)), CanEditMultipleObjects]
 public class GridEditor : Editor {
     Grid grid;
-    bool editGrid, showWireframe;
+    bool editGrid;
 
     public void OnEnable()
     {
-        Tools.hidden = true;
         grid = target as Grid;
         editGrid = false;
     }
 
-    public void OnDisable()
-    {
-        Tools.hidden = false;
-    }
+    public void OnDisable() { }
 
     public virtual void OnMouseDown(Vector3 worldPosition) { grid.SetChildFromWorldPosition(worldPosition); }
     public virtual void OnMouseDrag(Vector3 worldPosition) { OnMouseDown(worldPosition); }
@@ -102,13 +98,10 @@ public class GridEditor : Editor {
         editGrid = EditorGUILayout.Toggle("Edit Mode", editGrid);
         if (editGrid != oldEdit)
         {
+            Tools.hidden = editGrid;
+            grid.SetAllLevelActive(!editGrid);
             if (editGrid)
-            {
-                grid.SetAllLevelActive(false);
                 grid.SetLevelActive(grid.CurrentLevel, true);
-            }
-            else
-                grid.SetAllLevelActive(true);
         }
         if (GUILayout.Button("Re-Initialize Grid"))
             grid.GenerateGrid();
