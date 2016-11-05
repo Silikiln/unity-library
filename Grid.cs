@@ -37,6 +37,8 @@ public class Grid : MonoBehaviour
     }
     public virtual Plane Plane { get { return new Plane() { normal = Vector3.up, distance = (-CurrentLevel * Z_DIFF + transform.position.y) }; } }
 
+    const string _levelParentPrefix = "LEVEL ";
+    Transform[] _levelParents;
     Dictionary<int, GameObject>[] _gridObjects;
     protected Dictionary<int, GameObject>[] GridObjects
     {
@@ -102,7 +104,9 @@ public class Grid : MonoBehaviour
     protected virtual GameObject Instantiate(int x, int y, int z)
     {
         if (prefabToUse == null) return null;
-        return (GameObject) Instantiate(prefabToUse, LocalPosition(x, y, z) + prefabToUse.transform.position, prefabToUse.transform.rotation, transform);
+        GameObject obj = (GameObject) Instantiate(prefabToUse, LocalPosition(x, y, z) + prefabToUse.transform.position, prefabToUse.transform.rotation, transform);
+        obj.transform.SetParent(_levelParents[y]);
+        return obj;
     }
 
     public virtual Vector3 WorldToLocalSlot(Vector3 worldPosition)
@@ -131,24 +135,34 @@ public class Grid : MonoBehaviour
     public void SetAllLevelActive(bool active) { for (int i = 0; i < Depth; i++) SetLevelActive(i, active); }
     public virtual void SetLevelActive(int level, bool active)
     {
-        foreach (KeyValuePair<int, GameObject> kv in GridObjects[level])
-        {
-            if (kv.Value == null) continue;
-            kv.Value.gameObject.SetActive(active);
-        }
+        _levelParents[level].gameObject.SetActive(active);
     }
 
     public virtual void GenerateGrid()
     {
         ClearGrid();
 
+        _levelParents = new Transform[Depth];
         _gridObjects = new Dictionary<int, GameObject>[Depth];
-        for (int i = 0; i < Depth; i++) _gridObjects[i] = new Dictionary<int, GameObject>();
+        Transform levelParent;
+        for (int i = 0; i < Depth; i++)
+        {
+            if ((levelParent = transform.FindChild(_levelParentPrefix + i)) != null)
+                _levelParents[i] = levelParent;
+            else
+            {
+                _levelParents[i] = new GameObject(_levelParentPrefix + i).transform;
+                _levelParents[i].SetParent(transform);
+                _levelParents[i].localPosition = Vector3.zero;
+            }
+            _gridObjects[i] = new Dictionary<int, GameObject>();
+        }
         foreach (Transform t in transform)
-            if (PositionInGrid(t.position))
+            if (PositionInGrid(t.position) && t.GetComponents<Component>().Length > 1)
             {
                 Vector3 localSlot = WorldToLocalSlot(t.position);
                 _gridObjects[(int)localSlot.y].Add(ChildHashCode(localSlot), t.gameObject);
+                t.SetParent(_levelParents[(int)localSlot.y]);
             }
     }
 
