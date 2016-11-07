@@ -174,4 +174,25 @@ public class Grid : MonoBehaviour
             foreach (Dictionary<int, GameObject> dict in _gridObjects)
                 if (dict != null) dict.Clear();
     }
+
+    void OnDrawGizmosSelected()
+    {
+        float visualLeft = (Left * X_DIFF - X_DIFF / 2) * transform.lossyScale.x;
+        float visualRight = (Right * X_DIFF + X_DIFF / 2) * transform.lossyScale.x;
+        float visualTop = (Top * Z_DIFF + Z_DIFF / 2) * transform.lossyScale.z;
+        float visualBottom = (Bottom * Z_DIFF - Z_DIFF / 2) * transform.lossyScale.z;
+        float visualDepth = CurrentLevel * Y_DIFF * transform.lossyScale.y;
+        Vector3[] corners = {
+            new Vector3(visualLeft, visualDepth, visualTop),
+            new Vector3(visualLeft, visualDepth, visualBottom),
+            new Vector3(visualRight, visualDepth, visualBottom),
+            new Vector3(visualRight, visualDepth, visualTop)
+        };
+        for (int i = 0; i < corners.Length; i++)
+            corners[i] = transform.position + transform.localRotation * corners[i];
+
+        Gizmos.DrawLine(corners[0], corners[corners.Length - 1]);
+        for (int i = 0; i < corners.Length - 1; i++)
+            Gizmos.DrawLine(corners[i], corners[i + 1]);
+    }
 }
