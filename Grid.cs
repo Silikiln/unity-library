@@ -13,12 +13,12 @@ public class Grid : MonoBehaviour
     public int Height = 200;
     public int Depth = 1;
 
-    public int Left { get { return -Width / 2; } }
-    public int Right { get { return Width / 2 + Width % 2; } }
-    public int Bottom { get { return -Height / 2; } }
-    public int Top { get { return Height / 2 + Height % 2; } }
-    public int Floor { get { return -Depth / 2; } }
-    public int Ceiling { get { return Depth / 2 + Depth % 2; } }
+    public virtual int Left { get { return -Width / 2; } }
+    public virtual int Right { get { return Width / 2 + Width % 2 - 1; } }
+    public virtual int Bottom { get { return -Height / 2; } }
+    public virtual int Top { get { return Height / 2 + Height % 2 - 1; } }
+    public virtual int Floor { get { return 0; } }
+    public virtual int Ceiling { get { return Depth - 1; } }
 
     [SerializeField]
     private int _currentLevel = 0;
@@ -35,7 +35,14 @@ public class Grid : MonoBehaviour
             }
         }
     }
-    public virtual Plane Plane { get { return new Plane() { normal = Vector3.up, distance = (-CurrentLevel * Z_DIFF + transform.position.y) }; } }
+    public virtual Plane Plane {
+        get {
+            return new Plane() {
+                normal = -transform.up,
+                distance = CurrentLevel * Y_DIFF * transform.localScale.y
+            };
+        }
+    }
 
     const string _levelParentPrefix = "LEVEL ";
     Transform[] _levelParents;
@@ -59,11 +66,11 @@ public class Grid : MonoBehaviour
     public bool SlotInGrid(Vector3 slotPos) { return SlotInGrid((int)slotPos.x, (int)slotPos.y, (int)slotPos.z); }
     public virtual bool SlotInGrid(int x, int y, int z)
     {
-        return x >= Left    && x < Right
-            && z >= Bottom  && z < Top
-            && y >= Floor   && y < Ceiling;
+        return x >= Left    && x <= Right
+            && z >= Bottom  && z <= Top
+            && y >= Floor   && y <= Ceiling;
     }
-
+     
     public int ChildHashCode(Vector3 xyz) { return ChildHashCode((int)xyz.x, (int)xyz.y, (int)xyz.z); }
     public virtual int ChildHashCode(int x, int y, int z) { return (x - Left) + (z - Bottom) * Width; }
 
@@ -106,17 +113,21 @@ public class Grid : MonoBehaviour
         if (prefabToUse == null) return null;
         GameObject obj = (GameObject) Instantiate(prefabToUse, Vector3.zero, prefabToUse.transform.rotation, transform);
         obj.transform.SetParent(_levelParents[y]);
+        obj.transform.localRotation = prefabToUse.transform.localRotation;
+        obj.transform.localScale = prefabToUse.transform.localScale;
         obj.transform.localPosition = LocalPosition(x, y, z) + prefabToUse.transform.position;
+        obj.name = String.Format("{0},{1},{2}", x, y, z);
         return obj;
     }
 
     public virtual Vector3 WorldToLocalSlot(Vector3 worldPosition)
     {
         worldPosition -= transform.position;
+        worldPosition = Quaternion.Inverse(transform.localRotation) * worldPosition;
         Vector3 result = new Vector3(
-            Mathf.Round(worldPosition.x / (X_DIFF * transform.lossyScale.x)),
-            Mathf.Round(worldPosition.y / (Y_DIFF * transform.lossyScale.y)),
-            Mathf.Round(worldPosition.z / (Z_DIFF * transform.lossyScale.z))
+            Mathf.Round(worldPosition.x / (X_DIFF * transform.localScale.x)),
+            Mathf.Round(worldPosition.y / (Y_DIFF * transform.localScale.y)),
+            Mathf.Round(worldPosition.z / (Z_DIFF * transform.localScale.z))
         );
         return result;
     }
@@ -155,17 +166,20 @@ public class Grid : MonoBehaviour
                 _levelParents[i] = new GameObject(_levelParentPrefix + i).transform;
                 _levelParents[i].SetParent(transform);
                 _levelParents[i].localScale = Vector3.one;
+                _levelParents[i].localRotation = Quaternion.identity;
                 _levelParents[i].localPosition = Vector3.zero;
             }
             _gridObjects[i] = new Dictionary<int, GameObject>();
         }
-        foreach (Transform t in transform)
-            if (PositionInGrid(t.position) && t.GetComponents<Component>().Length > 1)
-            {
-                Vector3 localSlot = WorldToLocalSlot(t.position);
-                _gridObjects[(int)localSlot.y].Add(ChildHashCode(localSlot), t.gameObject);
-                t.SetParent(_levelParents[(int)localSlot.y]);
-            }
+
+        foreach (Transform parent in _levelParents)
+            foreach (Transform t in parent)
+                if (PositionInGrid(t.position) && t.GetComponents<Component>().Length > 1)
+                {
+                    Vector3 localSlot = WorldToLocalSlot(t.position);
+                    _gridObjects[(int)localSlot.y].Add(ChildHashCode(localSlot), t.gameObject);
+                    t.SetParent(_levelParents[(int)localSlot.y]);
+                }
     }
 
     protected virtual void ClearGrid()
