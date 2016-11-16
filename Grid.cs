@@ -37,10 +37,8 @@ public class Grid : MonoBehaviour
     }
     public virtual Plane Plane {
         get {
-            return new Plane() {
-                normal = -transform.up,
-                distance = CurrentLevel * Y_DIFF * transform.localScale.y
-            };
+            Vector3 center = transform.position + transform.up * CurrentLevel * Y_DIFF * transform.lossyScale.y;
+            return new Plane(center + transform.forward, center + transform.right, center - transform.right);
         }
     }
 
@@ -60,7 +58,7 @@ public class Grid : MonoBehaviour
     public GameObject[] basePrefabs;
     public GameObject prefabToUse;
 
-    void Start() { Debug.Log("Starting"); }
+    void Start() { }
 
     public bool PositionInGrid(Vector3 worldPos) { return SlotInGrid(WorldToLocalSlot(worldPos)); }
     public bool SlotInGrid(Vector3 slotPos) { return SlotInGrid((int)slotPos.x, (int)slotPos.y, (int)slotPos.z); }
