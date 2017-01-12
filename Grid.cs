@@ -111,8 +111,6 @@ public class Grid : MonoBehaviour
         if (prefabToUse == null) return null;
         GameObject obj = (GameObject) Instantiate(prefabToUse, Vector3.zero, prefabToUse.transform.rotation, transform);
         obj.transform.SetParent(_levelParents[y]);
-        obj.transform.localRotation = prefabToUse.transform.localRotation;
-        obj.transform.localScale = prefabToUse.transform.localScale;
         obj.transform.localPosition = LocalPosition(x, y, z) + prefabToUse.transform.position;
         obj.name = String.Format("{0},{1},{2}", x, y, z);
         return obj;
