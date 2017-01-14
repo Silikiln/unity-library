@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 
 public class GamepadInput {
-	public static int MAX_GAMEPAD_COUNT { get { return 11; } }
+	public static int MAX_GAMEPAD_COUNT { get { return 4; } }
 
 	private static GamepadInput[] singletonGamepads = new GamepadInput[MAX_GAMEPAD_COUNT];
 
@@ -108,8 +108,8 @@ public class GamepadInput {
 		RightVertical_Axis = "R_YAxis_" + index;
 		DPadHorizontal_Axis = "DPad_XAxis_" + index;
 		DPadVertical_Axis = "DPad_YAxis_" + index;
-		RightTrigger_Axis = "Triggers_R_" + index;
-		LeftTrigger_Axis = "Triggers_L_" + index;
+		RightTrigger_Axis = "TriggersR_" + index;
+		LeftTrigger_Axis = "TriggersL_" + index;
 	}
 
 	public bool IsValid { get { return Input.GetJoystickNames ().Length > index; } }
@@ -123,7 +123,7 @@ public class GamepadInput {
 	}
 
 	public static GamepadInput Get(int index) {
-		if (index < 0 || index >= singletonGamepads.Length)
+		if (index < 0 || index >= MAX_GAMEPAD_COUNT)
 			return null;
 
 		if (singletonGamepads [index] == null)
@@ -138,9 +138,13 @@ public class GamepadInput {
 
 	public static List<GamepadInput> AllGamepads { 
 		get {
-			List<GamepadInput> gamepads = new List<GamepadInput>(Input.GetJoystickNames().Length);
-			for (int i = 0; i < gamepads.Capacity; i++)
-				gamepads.Add(Get (i));
+			List<GamepadInput> gamepads = new List<GamepadInput>();
+			int i = 0;
+			foreach (string joystickName in Input.GetJoystickNames())
+				if (joystickName.Length > 0)
+					gamepads.Add (Get (i++));
+				else
+					i++;
 			return gamepads;
 		}
 	}
