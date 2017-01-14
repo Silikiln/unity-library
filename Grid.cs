@@ -146,6 +146,43 @@ public class Grid : MonoBehaviour
         _levelParents[level].gameObject.SetActive(active);
     }
 
+	public virtual List<GameObject> PerimeterSpaces(int x, int y, int z, int size) {
+		List<GameObject> perimeter = new List<GameObject> ();
+		if (size <= 0)
+			return perimeter;
+		GameObject space;
+		for (int xTest = -1; xTest <= size; xTest++) {
+			if (TryGetGridObject (x + xTest, y, z - 1, out space))
+				perimeter.Add (space);
+			if (TryGetGridObject (x + xTest, y, z + size, out space))
+				perimeter.Add (space);
+		}
+		for (int zTest = 0; zTest < size; zTest++) {
+			if (TryGetGridObject (x - 1, y, z + zTest, out space))
+				perimeter.Add (space);
+			if (TryGetGridObject (x + size, y, z + zTest, out space))
+				perimeter.Add (space);
+		}
+		return perimeter;
+	}
+
+	public virtual List<GameObject> RectangleSpaces(int x, int y, int z, int width, int height) {
+		return CubeSpaces (x, y, z, width, height, 1);
+	}
+
+	public virtual List<GameObject> CubeSpaces(int x, int y, int z, int width, int height, int depth) {
+		List<GameObject> cube = new List<GameObject> ();
+		if (width == 0 || height == 0 || depth == 0)
+			return cube;
+		GameObject space;
+		for (int yTest = 0; yTest < depth; yTest++)
+			for (int xTest = 0; xTest < width; xTest++)
+				for (int zTest = 0; zTest < height; zTest++)
+					if (TryGetGridObject (x + xTest, y + yTest, z + zTest, out space))
+						cube.Add (space);
+		return cube;
+	}
+
     public virtual void GenerateGrid()
     {
         ClearGrid();
