@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 
 public class GamepadInput {
-	public static int MAX_GAMEPAD_COUNT { get { return 4; } }
+	public static int MAX_GAMEPAD_COUNT { get { return 6; } }
 
 	private static GamepadInput[] singletonGamepads = new GamepadInput[MAX_GAMEPAD_COUNT];
 
-	private int index;
+	public int Index { private set; get; }
 
 	public float DPadDeadzone = 0;
 	public float TriggerDeadzone = .5f;
@@ -89,7 +89,7 @@ public class GamepadInput {
 	public bool RightTrigger { get { return Input.GetAxis (RightTrigger_Axis) >= TriggerDeadzone; } }
 
 	private GamepadInput(int index) {
-		this.index = index;
+		this.Index = index;
 
 		A_Button = "A_" + index;
 		B_Button = "B_" + index;
@@ -112,7 +112,7 @@ public class GamepadInput {
 		LeftTrigger_Axis = "TriggersL_" + index;
 	}
 
-	public bool IsValid { get { return Input.GetJoystickNames ().Length > index; } }
+	public bool IsValid { get { return Input.GetJoystickNames ().Length > Index; } }
 
 	public void Lock() {
 		InUse = true;
@@ -139,29 +139,9 @@ public class GamepadInput {
 	public static List<GamepadInput> AllGamepads { 
 		get {
 			List<GamepadInput> gamepads = new List<GamepadInput>();
-			int i = 0;
-			foreach (string joystickName in Input.GetJoystickNames())
-				if (joystickName.Length > 0)
-					gamepads.Add (Get (i++));
-				else
-					i++;
+			for (int i = 0; i < MAX_GAMEPAD_COUNT; i++)
+				gamepads.Add(Get(i));
 			return gamepads;
 		}
-	}
-
-	public static GamepadInput FirstAvailable {
-		get {
-			foreach (GamepadInput gamepad in AllGamepads)
-				if (!gamepad.InUse) {
-					gamepad.InUse = true;
-					return gamepad;
-				}
-			return null;
-		}
-	}
-
-	public static bool TryGetFirstAvailable(out GamepadInput gamepad) {
-		gamepad = FirstAvailable;
-		return gamepad != null && gamepad.IsValid;
 	}
 }
